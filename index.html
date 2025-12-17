@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Awareness Platform</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(120deg, #2b5876, #4e4376);
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            color: #333;
+        }
+
+        .module-selection, .section, .summary {
+            display: none;
+        }
+
+        .module-wrapper, .question-wrapper, .puzzle-wrapper, .feedback-wrapper {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f1f1f1;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #358a3a;
+        }
+
+        .btn.selected {
+            background: #ffc107;
+            color: #333;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .module {
+            background: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .module:hover {
+            background: #358a3a;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .next-btn {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .summary {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="header" id="mainHeader">Cybersecurity Awareness Modules</h2>
+
+        <!-- Module Selection -->
+        <div id="moduleSelection" class="module-selection">
+            <h3>Select a Module</h3>
+            <div id="modulesList"></div>
+        </div>
+
+        <!-- Questions Section -->
+        <div id="questionsSection" class="section">
+            <h3 id="moduleTitle">Module: [Title]</h3>
+            <div id="questionContent"></div>
+            <div class="next-btn">
+                <button class="btn" onclick="loadPuzzles()">Next: Puzzles</button>
+            </div>
+        </div>
+
+        <!-- Puzzles Section -->
+        <div id="puzzlesSection" class="section">
+            <h3>Module Puzzles</h3>
+            <div id="puzzleContent"></div>
+            <div class="next-btn">
+                <button class="btn" onclick="loadFeedback()">Next: Feedback</button>
+            </div>
+        </div>
+
+        <!-- Feedback Section -->
+        <div id="feedbackSection" class="section">
+            <h3>Feedback</h3>
+            <div id="feedbackContent"></div>
+            <div class="next-btn">
+                <button class="btn" onclick="finishModule()">Finish</button>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div id="summarySection" class="summary">
+            <h3>Module Summary</h3>
+            <p>Correct Answers: <span id="correctCount">0</span></p>
+            <p>Wrong Answers: <span id="wrongCount">0</span></p>
+            <div class="next-btn">
+                <button class="btn" onclick="restart()">Restart</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modules = [
+            "Email Security", "Phishing Awareness", "Password Safety", "Social Engineering",
+            "Secure Browsing", "Data Backup", "Antivirus & Firewalls", "IoT Security",
+            "Social Media Safety", "Privacy Settings"
+        ];
+
+        // Questions per module
+        const questionSet = [
+            [
+                { question: "What does HTTPS stand for?", options: ["Secure Connection", "Regular HTTP", "Text Protocol"], correct: 0 },
+                { question: "How to recognize phishing emails?", options: ["Check sender details", "Ignore all emails", "Always click links"], correct: 0 },
+                { question: "How often should you update your password?", options: ["Never", "Every few months", "Yearly"], correct: 1 },
+                { question: "Why avoid using public Wi-Fi for banking?", options: ["It's unsecured", "It's faster", "It's reliable"], correct: 0 },
+                { question: "What is a strong password example?", options: ["name123", "abc", "P@ssw0rd!"], correct: 2 },
+                { question: "What does two-factor authentication add?", options: ["Extra security", "No security", "Faster login"], correct: 0 },
+                { question: "Which is an encrypted website?", options: ["http://", "https://", "file://"], correct: 1 },
+                { question: "What to verify on suspicious emails?", options: ["Sender and content", "Nothing", "Trust everything"], correct: 0 },
+                { question: "What should backups include?", options: ["All critical data", "Only temp files", "No files"], correct: 0 },
+                { question: "What is the safest browser setting?", options: ["Enable tracking", "Enable HTTPS only", "Disable all security"], correct: 1 }
+            ]
+        ];
+
+        // Puzzles with multiple options
+        const puzzleSet = [
+            "Identify phishing attempts in this screenshot.",
+            "Match the following passwords to their security ratings.",
+            "Sort steps for securely accessing public Wi-Fi.",
+            "Spot fake websites in this list.",
+            "Rank common cybersecurity threats."
+        ];
+
+        // Feedback questions
+        const feedbackSet = [
+            "Was this module helpful?",
+            "Were the questions clear?",
+            "Were the puzzles meaningful?",
+            "Would you recommend this module?",
+            "Will you apply what you learned?"
+        ];
+
+        let selectedModule = "";
+        let correct = 0;
+        let wrong = 0;
+
+        function loadModules() {
+            document.getElementById("mainHeader").textContent = "Cybersecurity Awareness Modules";
+            document.getElementById("moduleSelection").style.display = "block";
+
+            const modulesList = document.getElementById("modulesList");
+            modulesList.innerHTML = modules.map((module, index) => `
+                <div class="module" onclick="startModule(${index})">${module}</div>
+            `).join("");
+        }
+
+        function startModule(index) {
+            selectedModule = modules[index];
+            correct = 0;
+            wrong = 0;
+
+            document.getElementById("moduleSelection").style.display = "none";
+            document.getElementById("questionsSection").style.display = "block";
+            document.getElementById("moduleTitle").textContent = `Module: ${selectedModule}`;
+            loadQuestions(index);
+        }
+
+        function loadQuestions(moduleIndex) {
+            const content = document.getElementById("questionContent");
+            content.innerHTML = questionSet[0].map((q, i) => `
+                <div class="question-wrapper">
+                    <strong>Q${i + 1}: ${q.question}</strong><br>
+                    ${q.options.map((opt, index) => `
+                        <button class="btn" onclick="checkAnswer(${moduleIndex}, ${i}, ${index}, this)">${opt}</button>
+                    `).join("")}
+                </div>
+            `).join("");
+        }
+
+        function checkAnswer(moduleIndex, questionIndex, selectedOption, btn) {
+            const question = questionSet[0][questionIndex];
+            if (selectedOption === question.correct) correct++;
+            else wrong++;
+
+            const buttons = btn.parentNode.querySelectorAll(".btn");
+            buttons.forEach(button => button.disabled = true);
+            btn.classList.add("selected");
+        }
+
+        function loadPuzzles() {
+            document.getElementById("questionsSection").style.display = "none";
+            document.getElementById("puzzlesSection").style.display = "block";
+
+            const content = document.getElementById("puzzleContent");
+            content.innerHTML = puzzleSet.map((puzzle, i) => `
+                <div class="puzzle-wrapper">
+                    <strong>P${i + 1}: ${puzzle}</strong><br>
+                    <button class="btn" onclick="highlight(this)">Option 1</button>
+                    <button class="btn" onclick="highlight(this)">Option 2</button>
+                </div>
+            `).join("");
+        }
+
+        function loadFeedback() {
+            document.getElementById("puzzlesSection").style.display = "none";
+            document.getElementById("feedbackSection").style.display = "block";
+
+            const content = document.getElementById("feedbackContent");
+            content.innerHTML = feedbackSet.map((feedback, i) => `
+                <div class="feedback-wrapper">
+                    <strong>${feedback}</strong><br>
+                    <button class="btn" onclick="highlight(this)">Yes</button>
+                    <button class="btn" onclick="highlight(this)">No</button>
+                </div>
+            `).join("");
+        }
+
+        function finishModule() {
+            document.getElementById("feedbackSection").style.display = "none";
+            document.getElementById("summarySection").style.display = "block";
+            document.getElementById("correctCount").textContent = correct;
+            document.getElementById("wrongCount").textContent = wrong;
+        }
+
+        function highlight(btn) {
+            const buttons = btn.parentNode.querySelectorAll(".btn");
+            buttons.forEach(button => button.classList.remove("selected"));
+            btn.classList.add("selected");
+        }
+
+        function restart() {
+            document.getElementById("summarySection").style.display = "none";
+            loadModules();
+        }
+
+        loadModules(); // Initialize
+    </script>
+</body>
+
+</html>
